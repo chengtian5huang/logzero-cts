@@ -42,7 +42,12 @@ class AnsiCodes(object):
             if not name.startswith('_'):
                 value = getattr(self, name)
                 setattr(self, name, code_to_chars(value))
-
+### define an __add__ here! when adding to colors
+### return somthing like \033[95;104m
+### maybe we need a color class!
+### or find a way to hook out the numbers.
+    def __add__(self, other):
+        print(self, other)
 
 class AnsiCursor(object):
     def UP(self, n=1):
@@ -119,10 +124,12 @@ Cursor = AnsiCursor()
 
 if __name__ == "__main__":
     from colorama import init as colorama_init
-    colorama_init(autoreset=True)
+    #colorama_init()
+
     fore_clr_names = list(AnsiFore.__dict__)[3:-1]
     back_clr_names = list(AnsiBack.__dict__)[3:-1]
-
+    ans = Fore.BLACK + Back.LIGHTWHITE_EX
+    print(ans, '\033[30;107m')
     #print(code_to_chars(104,95, 6)+'TEST'+ code_to_chars(0))
     print('\033[41;32m something here \033[0m')
     print('\033[101;92m something here \033[0m')
