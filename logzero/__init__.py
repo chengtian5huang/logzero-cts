@@ -162,10 +162,10 @@ class LogFormatter(logging.Formatter):
     DEFAULT_FORMAT = '%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d]%(end_color)s %(message)s'
     DEFAULT_DATE_FORMAT = '%y%m%d %H:%M:%S'
     DEFAULT_COLORS = {
-        logging.DEBUG: ForegroundColors.CYAN,
-        logging.INFO: ForegroundColors.GREEN,
-        logging.WARNING: ForegroundColors.YELLOW,
-        logging.ERROR: ForegroundColors.RED
+        logging.DEBUG: ForegroundColors.LIGHTWHITE_EX,
+        logging.INFO: ForegroundColors.LIGHTGREEN_EX,
+        logging.WARNING: ForegroundColors.LIGHTRED_EX,
+        logging.ERROR: ForegroundColors.LIGHTRED_EX
     }
 
     def __init__(self,
@@ -228,7 +228,8 @@ class LogFormatter(logging.Formatter):
             record.end_color = self._normal
         else:
             record.color = record.end_color = ''
-
+### replacement here!
+        print(record.__dict__)
         formatted = self._fmt % record.__dict__
 
         if record.exc_info:
@@ -475,5 +476,16 @@ def log_function_call(func):
 
 
 if __name__ == "__main__":
-    _logger = setup_logger()
-    _logger.info("hello")
+
+    f = '%(color)s[%(levelname)s][%(funcName)s|%(lineno)s] -> %(message)s%(end_color)s'
+    cts_msg = setup_logger(name='cts_msg', level=logging.DEBUG,# change level here
+                           formatter=LogFormatter(fmt=f))
+    LD = cts_msg.debug
+    LI = cts_msg.info
+    LW = cts_msg.warning
+    LE = cts_msg.error
+
+    LD('debug')
+    LI('info')
+    LW('warning')
+    LE('error')

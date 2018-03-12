@@ -8,9 +8,18 @@ OSC = '\033]'
 BEL = '\007'
 
 
-def code_to_chars(code):
+def codes_to_chars(*code):
+    """this one can recive multi codes to set foreground and background """
+    """at the same time"""
+    assert 0 < len(code) <= 2, '\033[91m accept one or two colors! \033[0m'
+    back_clr, fore_clr = sorted(code)
+
     return CSI + str(code) + 'm'
 
+def code_to_chars(code):
+    """this one can recive multi codes to set foreground and background """
+    """at the same time"""
+    return CSI + str(code) + 'm'
 
 def set_title(title):
     return OSC + '2;' + title + BEL
@@ -107,3 +116,23 @@ Fore = AnsiFore()
 Back = AnsiBack()
 Style = AnsiStyle()
 Cursor = AnsiCursor()
+
+if __name__ == "__main__":
+    from colorama import init as colorama_init
+    colorama_init(autoreset=True)
+    fore_clr_names = list(AnsiFore.__dict__)[3:-1]
+    back_clr_names = list(AnsiBack.__dict__)[3:-1]
+
+    #print(code_to_chars(104,95, 6)+'TEST'+ code_to_chars(0))
+    print('\033[41;32m something here \033[0m')
+    print('\033[101;92m something here \033[0m')
+    print('\033[95;104m something here \033[0m')
+    '''
+    for clr_name in fore_clr_names:
+        clr_code = getattr(AnsiFore, clr_name)
+        print(code_to_chars(clr_code)+clr_name+code_to_chars(39))
+
+    for clr_name in back_clr_names:
+        clr_code = getattr(AnsiBack, clr_name)
+        print(code_to_chars(clr_code)+clr_name+code_to_chars(39))
+    '''
