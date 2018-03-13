@@ -9,7 +9,7 @@ Tests for `logzero` module.
 import os
 import tempfile
 import logging
-
+import pytest
 import logzero
 
 
@@ -150,3 +150,5 @@ def test_api_logfile_custom_loglevel():
 
     finally:
         temp.close()
+if __name__ == '__main__':
+   pytest.main(['-q', __file__])

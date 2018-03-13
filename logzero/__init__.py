@@ -51,6 +51,8 @@ __author__ = """Chris Hager"""
 __email__ = 'chris@linuxuser.at'
 __version__ = '1.5.0'
 
+print('fuck!!!!!!')
+
 # Python 2+3 compatibility settings for logger
 bytes_type = bytes
 if sys.version_info >= (3, ):
@@ -84,7 +86,9 @@ if os.name == 'nt':
     from colorama import init as colorama_init
     colorama_init()
 
-def setup_logger(name=None, logfile=None, level=logging.DEBUG, formatter=None, maxBytes=0, backupCount=0, fileLoglevel=None, disableStderrLogger=False):
+def setup_logger(name=None, logfile=None, level=logging.DEBUG, formatter=None,
+                 maxBytes=0, backupCount=0, fileLoglevel=None,
+                 disableStderrLogger=False):
     """
     Configures and returns a fully configured logger instance, no hassles.
     If a logger with the specified name already exists, it returns the existing instance,
@@ -143,7 +147,10 @@ def setup_logger(name=None, logfile=None, level=logging.DEBUG, formatter=None, m
         _logger.addHandler(stderr_stream_handler)
 
     if logfile:
-        rotating_filehandler = RotatingFileHandler(filename=logfile, maxBytes=maxBytes, backupCount=backupCount)
+        rotating_filehandler = RotatingFileHandler(filename=logfile,
+                                                   maxBytes=maxBytes,
+                                                   backupCount=backupCount,
+                                                   encoding='utf-8')
         setattr(rotating_filehandler, LOGZERO_INTERNAL_LOGGER_ATTR, True)
         rotating_filehandler.setLevel(fileLoglevel or level)
         rotating_filehandler.setFormatter(formatter or LogFormatter(color=False))
@@ -230,7 +237,6 @@ class LogFormatter(logging.Formatter):
         else:
             record.color = record.end_color = ''
 ### replacement here!
-        print(record.__dict__)
         formatted = self._fmt % record.__dict__
 
         if record.exc_info:
@@ -315,7 +321,9 @@ def setup_default_logger(logfile=None, level=logging.DEBUG, formatter=None, maxB
     :arg bool disableStderrLogger: Should the default stderr logger be disabled. Defaults to False.
     """
     global logger
-    logger = setup_logger(name=LOGZERO_DEFAULT_LOGGER, logfile=logfile, level=level, formatter=formatter, disableStderrLogger=disableStderrLogger)
+    logger = setup_logger(name=LOGZERO_DEFAULT_LOGGER, logfile=logfile,
+                          level=level, formatter=formatter,
+                          disableStderrLogger=disableStderrLogger)
     return logger
 
 
@@ -330,7 +338,8 @@ def reset_default_logger():
     _loglevel = logging.DEBUG
     _logfile = None
     _formatter = None
-    logger = setup_logger(name=LOGZERO_DEFAULT_LOGGER, logfile=_logfile, level=_loglevel, formatter=_formatter)
+    logger = setup_logger(name=LOGZERO_DEFAULT_LOGGER, logfile=_logfile,
+                          level=_loglevel, formatter=_formatter)
 
 
 # Initially setup the default logger

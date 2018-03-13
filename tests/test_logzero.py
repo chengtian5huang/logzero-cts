@@ -6,13 +6,43 @@ test_logzero
 
 Tests for `logzero` module.
 """
+import sys
+sys.path.append("..")
 import os
 import tempfile
 import logging
 
 import logzero
 import pytest
+0/0
+# in NT os, u cant open *tempfile.NamedTemporaryFile* a second time
+# which mean pass *temp* to kwarg *logfile* will raise
+# a PerrmissionError.
 
+real_NamedTemporaryFile = tempfile.NamedTemporaryFile
+tempfile.NamedTemporaryFile = None
+
+class nt_compat_cls(object):
+    def __init__(self, name):
+        print(name, 'name passed to nt_compat_cls')
+        self.name = os.path.basename(name)+'_nt_compat'
+    def close(self):
+        """ dont know for sure, who the hell delete the file?"""
+        pass
+
+def nt_compat_wrapper(*args, **kwargs):
+    temp_path = real_NamedTemporaryFile(*args, **kwargs)
+    nt_temp = nt_compat_cls(temp_path.name)
+    temp_path.close()
+    print(nt_temp.name, 'just created')
+    return nt_temp
+
+def for_nt_compat(*args, **kwargs):
+    if os.name != 'nt':
+        return tempfile.NamedTemporaryFile
+    return nt_compat_wrapper
+
+tempfile.NamedTemporaryFile = for_nt_compat()
 
 def test_write_to_logfile_and_stderr(capsys):
     """
@@ -21,6 +51,7 @@ def test_write_to_logfile_and_stderr(capsys):
     logzero.reset_default_logger()
     temp = tempfile.NamedTemporaryFile()
     try:
+        print(temp.name, 'before pass to logfile')
         logger = logzero.setup_logger(logfile=temp.name)
         logger.info("test log output")
 
@@ -32,11 +63,10 @@ def test_write_to_logfile_and_stderr(capsys):
             content = f.read()
             assert " test_logzero:" in content
             assert content.endswith("test log output\n")
-
     finally:
         temp.close()
 
-
+'''
 def test_custom_formatter():
     """
     Should work with a custom formatter.
@@ -96,6 +126,7 @@ def test_bytes():
     finally:
         temp.close()
 
+'''
 
 def test_unicode():
     """
@@ -106,7 +137,8 @@ def test_unicode():
     try:
         logger = logzero.setup_logger(logfile=temp.name)
 
-        logger.debug("😄 😁 😆 😅 😂")
+        msg = "😄 😁 😆 😅 😂"
+        logger.debug(msg)
 
         with open(temp.name, "rb") as f:
             content = f.read()
@@ -114,8 +146,7 @@ def test_unicode():
 
     finally:
         temp.close()
-
-
+'''
 def test_multiple_loggers_one_logfile():
     """
     Should properly log bytes
@@ -299,3 +330,8 @@ def test_default_logger_syslog_only(capsys):
     logzero.logger.error('debug')
     out, err = capsys.readouterr()
     assert out == '' and err == ''
+'''
+if __name__ == '__main__':
+   pytest.main([__file__, '-v'])
+   #test_write_to_logfile_and_stderr(1)
+
