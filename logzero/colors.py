@@ -7,18 +7,7 @@ CSI = '\033['
 OSC = '\033]'
 BEL = '\007'
 
-
-def codes_to_chars(*code):
-    """this one can recive multi codes to set foreground and background """
-    """at the same time"""
-    assert 0 < len(code) <= 2, '\033[91m accept one or two colors! \033[0m'
-    back_clr, fore_clr = sorted(code)
-
-    return CSI + str(code) + 'm'
-
 def code_to_chars(code):
-    """this one can recive multi codes to set foreground and background """
-    """at the same time"""
     return CSI + str(code) + 'm'
 
 def set_title(title):
@@ -42,12 +31,6 @@ class AnsiCodes(object):
             if not name.startswith('_'):
                 value = getattr(self, name)
                 setattr(self, name, code_to_chars(value))
-### define an __add__ here! when adding to colors
-### return somthing like \033[95;104m
-### maybe we need a color class!
-### or find a way to hook out the numbers.
-    def __add__(self, other):
-        print(self, other)
 
 class AnsiCursor(object):
     def UP(self, n=1):
@@ -122,24 +105,72 @@ Back = AnsiBack()
 Style = AnsiStyle()
 Cursor = AnsiCursor()
 
+def simple_test_1():
+    """these tests show that we can use fore and back reset both anytime."""
+    print(Back.LIGHTGREEN_EX + 'TEST' + Fore.RESET + Back.RESET)
+    print(Fore.LIGHTBLUE_EX + 'TEST' + Fore.RESET + Back.RESET)
+    print(Fore.LIGHTWHITE_EX + Back.LIGHTBLUE_EX + 'TEST'
+          + Fore.RESET + Back.RESET)
+    print('without any fancy thing')
+
+def simple_test_2():
+    """these tests shows that connect them anyway will work."""
+    print('\033[41;32m something here' + Back.RESET + Fore.RESET)
+    print('\033[101m\033[92m something here' + Fore.RESET + Back.RESET)
+    print('\033[95;104m something here'+ Fore.RESET + Back.RESET)
+    print('\033[95m\033[104m something here'+ Fore.RESET + Back.RESET)
+
+def show_all_colors():
+    """show all fore,back colors and their combinations"""
+    print('#'*48)
+    print('#'+' '*46+'#')
+    print("# maybe u will see nothing in IDE's console!!! #")
+    print('#'+' '*46+'#')
+    print('#'*48)
+
+    fore_clr_names = [clr for clr in list(Fore.__dict__.keys())
+                          if not clr.startswith('__') and clr != 'RESET']
+
+    back_clr_names = [clr for clr in list(Back.__dict__.keys())
+                          if not clr.startswith('__') and clr != 'RESET']
+
+    #show all combinitions as following.
+    from itertools import product
+
+    for i, clr_name in enumerate(fore_clr_names, 1):
+        clr_code = getattr(Fore, clr_name)
+        #remind users this one is black in case he will get confused.
+        if clr_name == 'BLACK':
+            print(clr_code + Back.WHITE + clr_name + ' this one is black!'
+                  + Fore.RESET + Back.RESET)
+            continue
+
+        #use blank lines to seperate fore_colors and back's
+        if i == len(fore_clr_names):
+            print(clr_code + clr_name + Fore.RESET + Back.RESET + '\n\n')
+            continue
+
+        print(clr_code + clr_name + Fore.RESET + Back.RESET + '|||', end='')
+
+    for i, clr_name in enumerate(back_clr_names, 1):
+        clr_code = getattr(Back, clr_name)
+
+        #use blank lines to seperate back_colors and combinations
+        if i == len(back_clr_names):
+            print(clr_code + clr_name + Fore.RESET + Back.RESET + '\n\n')
+            continue
+
+        print(clr_code + clr_name + Fore.RESET + Back.RESET + '|||', end='')
+
+    for clr_combs in product(fore_clr_names, back_clr_names):
+        fore_clr, back_clr = clr_combs
+
+        msg = '{fore} ON {back}'.format(fore=fore_clr, back=back_clr)
+        fore_code, back_code = getattr(Fore, fore_clr), getattr(Back, back_clr)
+
+        print(fore_code + back_code + msg + Fore.RESET + Back.RESET + '|||', end='')
+
 if __name__ == "__main__":
     from colorama import init as colorama_init
-    #colorama_init()
-
-    fore_clr_names = list(AnsiFore.__dict__)[3:-1]
-    back_clr_names = list(AnsiBack.__dict__)[3:-1]
-    ans = Fore.BLACK + Back.LIGHTWHITE_EX
-    print(ans, '\033[30;107m')
-    #print(code_to_chars(104,95, 6)+'TEST'+ code_to_chars(0))
-    print('\033[41;32m something here \033[0m')
-    print('\033[101;92m something here \033[0m')
-    print('\033[95;104m something here \033[0m')
-    '''
-    for clr_name in fore_clr_names:
-        clr_code = getattr(AnsiFore, clr_name)
-        print(code_to_chars(clr_code)+clr_name+code_to_chars(39))
-
-    for clr_name in back_clr_names:
-        clr_code = getattr(AnsiBack, clr_name)
-        print(code_to_chars(clr_code)+clr_name+code_to_chars(39))
-    '''
+    colorama_init()
+    show_all_colors()

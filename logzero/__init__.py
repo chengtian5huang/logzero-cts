@@ -39,6 +39,7 @@ import os
 import sys
 import logging
 from logzero.colors import Fore as ForegroundColors
+from logzero.colors import Back as BackgroundColors
 from logging.handlers import RotatingFileHandler, SysLogHandler
 
 try:
@@ -78,11 +79,10 @@ _loglevel = logging.DEBUG
 _logfile = None
 _formatter = None
 
-# Setup colorama on Windows
+### Setup colorama on Windows
 if os.name == 'nt':
     from colorama import init as colorama_init
     colorama_init()
-
 
 def setup_logger(name=None, logfile=None, level=logging.DEBUG, formatter=None, maxBytes=0, backupCount=0, fileLoglevel=None, disableStderrLogger=False):
     """
@@ -162,10 +162,11 @@ class LogFormatter(logging.Formatter):
     DEFAULT_FORMAT = '%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d]%(end_color)s %(message)s'
     DEFAULT_DATE_FORMAT = '%y%m%d %H:%M:%S'
     DEFAULT_COLORS = {
-        logging.DEBUG: ForegroundColors.LIGHTWHITE_EX,
+        logging.DEBUG: ForegroundColors.BLACK + BackgroundColors.LIGHTWHITE_EX,
         logging.INFO: ForegroundColors.LIGHTGREEN_EX,
         logging.WARNING: ForegroundColors.LIGHTRED_EX,
-        logging.ERROR: ForegroundColors.LIGHTRED_EX
+        logging.ERROR: (ForegroundColors.LIGHTYELLOW_EX +
+                        BackgroundColors.RED)
     }
 
     def __init__(self,
@@ -194,7 +195,7 @@ class LogFormatter(logging.Formatter):
 
         if color and _stderr_supports_color():
             self._colors = colors
-            self._normal = ForegroundColors.RESET
+            self._normal = ForegroundColors.RESET+BackgroundColors.RESET
 
     def format(self, record):
         try:
@@ -476,7 +477,6 @@ def log_function_call(func):
 
 
 if __name__ == "__main__":
-
     f = '%(color)s[%(levelname)s][%(funcName)s|%(lineno)s] -> %(message)s%(end_color)s'
     cts_msg = setup_logger(name='cts_msg', level=logging.DEBUG,# change level here
                            formatter=LogFormatter(fmt=f))
