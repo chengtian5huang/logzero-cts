@@ -11,16 +11,15 @@ sys.path.append("..")
 import os
 import tempfile
 import logging
-
+sys.path.insert(0, "D:\py_work\cts_tools\logzero_cts")
 import logzero
 import pytest
-0/0
+
 # in NT os, u cant open *tempfile.NamedTemporaryFile* a second time
 # which mean pass *temp* to kwarg *logfile* will raise
 # a PerrmissionError.
-
 real_NamedTemporaryFile = tempfile.NamedTemporaryFile
-tempfile.NamedTemporaryFile = None
+
 
 class nt_compat_cls(object):
     def __init__(self, name):
@@ -30,19 +29,20 @@ class nt_compat_cls(object):
         """ dont know for sure, who the hell delete the file?"""
         pass
 
-def nt_compat_wrapper(*args, **kwargs):
-    temp_path = real_NamedTemporaryFile(*args, **kwargs)
-    nt_temp = nt_compat_cls(temp_path.name)
-    temp_path.close()
-    print(nt_temp.name, 'just created')
-    return nt_temp
+def nt_compat(*args, **kwargs):
 
-def for_nt_compat(*args, **kwargs):
+    def nt_compat_wrapper(*args, **kwargs):
+        temp_path = real_NamedTemporaryFile(*args, **kwargs)
+        nt_temp = nt_compat_cls(temp_path.name)
+        temp_path.close()
+        print(nt_temp.name, 'just created')
+        return nt_temp
+
     if os.name != 'nt':
-        return tempfile.NamedTemporaryFile
-    return nt_compat_wrapper
+        return real_NamedTemporaryFile(*args, **kwargs)
+    return nt_compat_wrapper(*args, **kwargs)
 
-tempfile.NamedTemporaryFile = for_nt_compat()
+tempfile.NamedTemporaryFile = nt_compat
 
 def test_write_to_logfile_and_stderr(capsys):
     """
@@ -142,10 +142,19 @@ def test_unicode():
 
         with open(temp.name, "rb") as f:
             content = f.read()
-            assert "\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x82\\n" in repr(content)
-
+            right_ans_nt_compat = {
+                    ("\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9"
+                     "f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x8"
+                     "2\\r\\n'"),
+                    ("\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9"
+                     "f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x8"
+                     "2\\n'")# notice nt use \\r\\n for a new line
+             }
+            assert any( right_ans in repr(content)
+                        for right_ans in right_ans_nt_compat )
     finally:
         temp.close()
+
 '''
 def test_multiple_loggers_one_logfile():
     """
