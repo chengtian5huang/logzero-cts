@@ -66,7 +66,7 @@ def test_write_to_logfile_and_stderr(capsys):
     finally:
         temp.close()
 
-'''
+#'''
 def test_custom_formatter():
     """
     Should work with a custom formatter.
@@ -126,7 +126,7 @@ def test_bytes():
     finally:
         temp.close()
 
-'''
+#'''
 
 def test_unicode():
     """
@@ -155,7 +155,7 @@ def test_unicode():
     finally:
         temp.close()
 
-'''
+#'''
 def test_multiple_loggers_one_logfile():
     """
     Should properly log bytes
@@ -339,8 +339,9 @@ def test_default_logger_syslog_only(capsys):
     logzero.logger.error('debug')
     out, err = capsys.readouterr()
     assert out == '' and err == ''
-'''
+#'''
 if __name__ == '__main__':
-   pytest.main([__file__, '-v'])
+   #pytest.main([__file__, '-v'])
+   pytest.main([__file__])
    #test_write_to_logfile_and_stderr(1)
 
