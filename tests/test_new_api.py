@@ -13,6 +13,21 @@ import pytest
 import logzero
 
 
+def _check_strs_in(strs, content=None):
+    must_strs = strs.get('ins')
+    banned_strs = strs.get('outs')
+    # check if test case is valid, a str cant not be banned while it is a must.
+    assert must_strs & banned_strs == set()
+
+    for failed in filter(lambda s: not (s in content), must_strs):
+        for part in failed.split(maxsplit=2):
+            assert part in content
+
+    for failed in filter(lambda s: s in content, banned_strs):
+        for part in failed.split(maxsplit=2):
+            assert part in content
+
+
 def test_api_logfile(capsys):
     """
     logzero.logfile(..) should work as expected
@@ -36,10 +51,15 @@ def test_api_logfile(capsys):
 
         with open(temp.name) as f:
             content = f.read()
-            assert "] info1" not in content
-            assert "] info2" in content
-            assert "] info3" not in content
-            assert "] info4" in content
+            cases = {
+                'ins': {
+                    "] info2", "] info4"
+                },
+                'outs': {
+                    "] info1", "] info3"
+                }
+            }
+            _check_strs_in(cases, content=content)
 
     finally:
         temp.close()
@@ -54,15 +74,21 @@ def test_api_loglevel(capsys):
     try:
         logzero.logfile(temp.name)
         logzero.logger.info("info1")
-        logzero.loglevel(logging.WARN)
+        logzero.loglevel(logging.WARNING)
         logzero.logger.info("info2")
-        logzero.logger.warn("warn1")
+        logzero.logger.warning("warning1")
 
         with open(temp.name) as f:
             content = f.read()
-            assert "] info1" in content
-            assert "] info2" not in content
-            assert "] warn1" in content
+            cases = {
+                'ins': {
+                    "] info1", "] warning1"
+                },
+                'outs': {
+                    "] info2"
+                }
+            }
+            _check_strs_in(cases, content=content)
 
     finally:
         temp.close()
@@ -79,15 +105,15 @@ def test_api_loglevel_custom_handlers(capsys):
     # try:
     #     logzero.logfile(temp.name)
     #     logzero.logger.info("info1")
-    #     logzero.loglevel(logging.WARN)
+    #     logzero.loglevel(logging.WARNING)
     #     logzero.logger.info("info2")
-    #     logzero.logger.warn("warn1")
+    #     logzero.logger.warning("warning1")
 
     #     with open(temp.name) as f:
     #         content = f.read()
     #         assert "] info1" in content
     #         assert "] info2" not in content
-    #         assert "] warn1" in content
+    #         assert "] warning1" in content
 
     # finally:
     #     temp.close()
@@ -109,9 +135,15 @@ def test_api_rotating_logfile(capsys):
 
         with open(temp.name) as f:
             content = f.read()
-            assert "] info1" not in content  # logged before setting up logfile
-            assert "] info2" not in content  # already rotated out
-            assert "] info3" in content  # already rotated out
+            cases = {
+                'ins': {
+                    "] info3"
+                },
+                'outs': {
+                    "] info1", "] info2"
+                }
+            }
+            _check_strs_in(cases, content=content)
 
         fn_rotated = temp.name + ".1"
         assert os.path.exists(fn_rotated)
@@ -131,24 +163,31 @@ def test_api_logfile_custom_loglevel():
     temp = tempfile.NamedTemporaryFile()
     try:
         # Set logfile with custom loglevel
-        logzero.logfile(temp.name, loglevel=logging.WARN)
+        logzero.logfile(temp.name, loglevel=logging.WARNING)
         logzero.logger.info("info1")
-        logzero.logger.warn("warn1")
+        logzero.logger.warning("warning1")
 
         # If setting a loglevel with logzero.loglevel(..) it will not overwrite
         # the custom loglevel of the file handler
         logzero.loglevel(logging.INFO)
         logzero.logger.info("info2")
-        logzero.logger.warn("warn2")
+        logzero.logger.warning("warning2")
 
         with open(temp.name) as f:
             content = f.read()
-            assert "] info1" not in content
-            assert "] warn1" in content
-            assert "] info2" not in content
-            assert "] warn2" in content
+            cases = {
+                'ins': {
+                    "] warning2", "] warning1"
+                },
+                'outs': {
+                    "] info2", "] info1"
+                }
+            }
+            _check_strs_in(cases, content=content)
 
     finally:
         temp.close()
+
+
 if __name__ == '__main__':
-   pytest.main(['-q', __file__])
+    pytest.main(['-q', __file__])
