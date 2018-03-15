@@ -25,9 +25,9 @@ class nt_compat_cls(object):
         self.name = os.path.basename(name)+'.nt_compat'
 
     def close(self):
-        """dont know who the hell open twice on this one file?"""
-        """every file name is somethig like xxxxx.nt_compat.nt_compat"""
+        """do nothing, cant delete nt_compat temp files now"""
         pass
+
 
 def tearDown_nt_compat():
     tempfile.NamedTemporaryFile = None
@@ -38,7 +38,7 @@ def tearDown_nt_compat():
         if file.endswith('nt_compat'):
             try:
                 os.remove(file)
-            except Exception as err:
+            except (PermissionError, FileNotFoundError):
                 cant_del += 1
             else:
                 deled += 1
@@ -317,21 +317,24 @@ def test_setup_logger_reconfiguration():
         temp.close()
 
 
-def test_setup_logger_logfile_custom_loglevel(capsys):
+def test_setup_logger_logfile_custom_loglevel():
     """
     setup_logger(..) with filelogger and custom loglevel
     """
     logzero.reset_default_logger()
     temp = tempfile.NamedTemporaryFile()
     try:
-        logger = logzero.setup_logger(logfile=temp.name, fileLoglevel=logging.WARN)
+        logger = logzero.setup_logger(logfile=temp.name, fileLoglevel=logging.WARNING)
         logger.info("info1")
-        logger.warn("warn1")
+        logger.warning("warning1")
 
         with open(temp.name) as f:
             content = f.read()
-            assert "] info1" not in content
-            assert "] warn1" in content
+            cases = {
+                    'ins':{"] warning1"},
+                    'outs':{"] info1"}
+                    }
+            _check_strs_in(cases, content=content)
 
     finally:
         temp.close()
@@ -353,7 +356,7 @@ def test_default_logger_logfile_only(capsys):
     confirm that no data is written to stderr
     """
     test_default_logger(disableStdErrorLogger=True)
-    out, err = capsys.readouterr()
+    _, err = capsys.readouterr()
     assert err == ''
 
 
@@ -362,7 +365,7 @@ def test_default_logger_stderr_output(capsys):
     Run the ``test_default_logger`` and confirm that the proper data is written to stderr
     """
     test_default_logger()
-    out, err = capsys.readouterr()
+    _, err = capsys.readouterr()
     test_default_logger_output(err)
 
 
