@@ -20,6 +20,7 @@ import pytest
 real_NamedTemporaryFile = tempfile.NamedTemporaryFile
 tempfile.NamedTemporaryFile = None
 
+
 class nt_compat_cls(object):
     def __init__(self, name):
         self.name = os.path.basename(name)+'.nt_compat'
@@ -59,7 +60,9 @@ def nt_compat(*args, **kwargs):
         return real_NamedTemporaryFile(*args, **kwargs)
     return nt_compat_wrapper(*args, **kwargs)
 
+
 tempfile.NamedTemporaryFile = nt_compat
+
 
 def test_write_to_logfile_and_stderr(capsys):
     """
@@ -82,7 +85,7 @@ def test_write_to_logfile_and_stderr(capsys):
     finally:
         temp.close()
 
-#'''
+
 def test_custom_formatter():
     """
     Should work with a custom formatter.
@@ -142,7 +145,6 @@ def test_bytes():
     finally:
         temp.close()
 
-#'''
 
 def test_unicode():
     """
@@ -159,19 +161,19 @@ def test_unicode():
         with open(temp.name, "rb") as f:
             content = f.read()
             right_ans_nt_compat = {
-                    ("\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9"
-                     "f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x8"
-                     "2\\r\\n'"),
-                    ("\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9"
-                     "f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x8"
-                     "2\\n'")# notice nt use \\r\\n for a new line
-             }
-            assert any( right_ans in repr(content)
-                        for right_ans in right_ans_nt_compat )
+                ("\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9"
+                 "f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x8"
+                 "2\\r\\n'"),
+                ("\\xf0\\x9f\\x98\\x84 \\xf0\\x9f\\x98\\x81 \\xf0\\x9"
+                 "f\\x98\\x86 \\xf0\\x9f\\x98\\x85 \\xf0\\x9f\\x98\\x8"
+                 "2\\n'")  # notice nt use \\r\\n for a new line
+            }
+            assert any(right_ans in repr(content)
+                       for right_ans in right_ans_nt_compat)
     finally:
         temp.close()
 
-#'''
+
 def test_multiple_loggers_one_logfile():
     """
     Should properly log bytes
@@ -205,11 +207,13 @@ def test_default_logger(disableStdErrorLogger=False):
     logzero.reset_default_logger()
     temp = tempfile.NamedTemporaryFile()
     try:
-        logzero.setup_default_logger(logfile=temp.name, disableStderrLogger=disableStdErrorLogger)
+        logzero.setup_default_logger(
+            logfile=temp.name, disableStderrLogger=disableStdErrorLogger)
         logzero.logger.debug("debug1")  # will be logged
 
         # Reconfigure with loglevel ERROR
-        logzero.setup_default_logger(logfile=temp.name, level=logging.ERROR, disableStderrLogger=disableStdErrorLogger)
+        logzero.setup_default_logger(
+            logfile=temp.name, level=logging.ERROR, disableStderrLogger=disableStdErrorLogger)
         logzero.logger.debug("debug2")  # will not be logged
         logzero.logger.info("info1")  # will not be logged
         logzero.logger.error("error1")  # will be logged
@@ -217,7 +221,8 @@ def test_default_logger(disableStdErrorLogger=False):
         # Reconfigure with a different formatter
         log_format = '%(color)s[xxx]%(end_color)s %(message)s'
         formatter = logzero.LogFormatter(fmt=log_format)
-        logzero.setup_default_logger(logfile=temp.name, level=logging.INFO, formatter=formatter, disableStderrLogger=disableStdErrorLogger)
+        logzero.setup_default_logger(logfile=temp.name, level=logging.INFO,
+                                     formatter=formatter, disableStderrLogger=disableStdErrorLogger)
 
         logzero.logger.info("info2")  # will be logged with new formatter
         logzero.logger.debug("debug3")  # will not be logged
@@ -229,27 +234,30 @@ def test_default_logger(disableStdErrorLogger=False):
     finally:
         temp.close()
 
+
 def _check_strs_in(strs, content=None):
     must_strs = strs.get('ins')
     banned_strs = strs.get('outs')
     # check if test case is valid, a str cant not be banned while it is a must.
     assert must_strs & banned_strs == set()
 
-    for failed in filter(lambda s:not (s in content), must_strs):
+    for failed in filter(lambda s: not (s in content), must_strs):
         for part in failed.split(maxsplit=2):
             assert part in content
 
-    for failed in filter(lambda s:s in content, banned_strs):
+    for failed in filter(lambda s: s in content, banned_strs):
         for part in failed.split(maxsplit=2):
             assert part in content
+
 
 @pytest.mark.skip(reason="not a standalone test")
 def test_default_logger_output(content):
     cases = {
-            'ins':{"] debug1", "xxx] info2"},
-            'outs':{"] debug2", "] info1", "] debug3"}
-            }
+        'ins': {"] debug1", "xxx] info2"},
+        'outs': {"] debug2", "] info1", "] debug3"}
+    }
     _check_strs_in(cases, content=content)
+
 
 def test_setup_logger_reconfiguration():
     """
@@ -290,27 +298,27 @@ def test_setup_logger_reconfiguration():
         with open(temp.name) as f:
             content = f.read()
             cases = {
-                    'ins': {
-                            "] debug1", "] debug3", "] info1",
-                            "] debug5",
-                            },
-                    'outs': {
-                            "] debug4", "] debug2",
-                            }
-                    }
+                'ins': {
+                    "] debug1", "] debug3", "] info1",
+                    "] debug5",
+                },
+                'outs': {
+                    "] debug4", "] debug2",
+                }
+            }
             _check_strs_in(cases, content=content)
 
         with open(temp2.name) as f:
             content = f.read()
             cases = {
-                    'ins': {
-                            "] debug1", "] debug3", "] info1",
-                            "] debug5", "] debug2"
-                            },
-                    'outs': {
-                            "] debug4",
-                            }
-                    }
+                'ins': {
+                    "] debug1", "] debug3", "] info1",
+                    "] debug5", "] debug2"
+                },
+                'outs': {
+                    "] debug4",
+                }
+            }
             _check_strs_in(cases, content=content)
 
     finally:
@@ -324,16 +332,17 @@ def test_setup_logger_logfile_custom_loglevel():
     logzero.reset_default_logger()
     temp = tempfile.NamedTemporaryFile()
     try:
-        logger = logzero.setup_logger(logfile=temp.name, fileLoglevel=logging.WARNING)
+        logger = logzero.setup_logger(
+            logfile=temp.name, fileLoglevel=logging.WARNING)
         logger.info("info1")
         logger.warning("warning1")
 
         with open(temp.name) as f:
             content = f.read()
             cases = {
-                    'ins':{"] warning1"},
-                    'outs':{"] info1"}
-                    }
+                'ins': {"] warning1"},
+                'outs': {"] info1"}
+            }
             _check_strs_in(cases, content=content)
 
     finally:
@@ -379,10 +388,10 @@ def test_default_logger_syslog_only(capsys):
     logzero.logger.error('debug')
     out, err = capsys.readouterr()
     assert out == '' and err == ''
-#'''
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-x'])
     tearDown_nt_compat()
 else:
     tearDown_nt_compat()
-

@@ -488,12 +488,12 @@ def log_function_call(func):
 
 if __name__ == "__main__":
     f = '%(color)s[%(levelname)s][%(funcName)s|%(lineno)s] -> %(message)s%(end_color)s'
-    cts_msg = setup_logger(name='cts_msg', level=logging.DEBUG,# change level here
+    demo = setup_logger(name='demo', level=logging.DEBUG,# change level here
                            formatter=LogFormatter(fmt=f))
-    LD = cts_msg.debug
-    LI = cts_msg.info
-    LW = cts_msg.warning
-    LE = cts_msg.error
+    LD = demo.debug
+    LI = demo.info
+    LW = demo.warning
+    LE = demo.error
 
     LD('debug')
     LI('info')
