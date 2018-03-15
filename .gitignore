@@ -65,3 +65,4 @@ target/
 tests/tmpo4bzrf36
 tests/fuck
 tests/tmprj2pbk3c_nt_compat
+*.nt_compat

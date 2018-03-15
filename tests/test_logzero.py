@@ -24,10 +24,24 @@ real_NamedTemporaryFile = tempfile.NamedTemporaryFile
 class nt_compat_cls(object):
     def __init__(self, name):
         print(name, 'name passed to nt_compat_cls')
-        self.name = os.path.basename(name)+'_nt_compat'
+        self.name = os.path.basename(name)+'.nt_compat'
     def close(self):
         """ dont know for sure, who the hell delete the file?"""
+        """why it has to _nt_compat?"""
         pass
+
+def tearDown_nt_compat():
+    dir_files = os.listdir()
+    for file in dir_files:
+        if file.endswith('nt_compat'):
+            try:
+                os.remove(file)
+            except Exception as err:
+                print(repr(err))
+                print('remove failed!!!')
+            else:
+                print('remove done!!!')
+
 
 def nt_compat(*args, **kwargs):
 
@@ -341,7 +355,7 @@ def test_default_logger_syslog_only(capsys):
     assert out == '' and err == ''
 #'''
 if __name__ == '__main__':
-   #pytest.main([__file__, '-v'])
-   pytest.main([__file__])
+   pytest.main([__file__, '-x'])
+   tearDown_nt_compat()
    #test_write_to_logfile_and_stderr(1)
 
