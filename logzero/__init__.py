@@ -51,9 +51,6 @@ __author__ = """Chris Hager"""
 __email__ = 'chris@linuxuser.at'
 __version__ = '1.5.0'
 
-banner = 'logzero |||imported from cts_tools'
-print(banner)
-
 # Python 2+3 compatibility settings for logger
 bytes_type = bytes
 if sys.version_info >= (3, ):
@@ -300,7 +297,8 @@ def _safe_unicode(s):
         return repr(s)
 
 
-def setup_default_logger(logfile=None, level=logging.DEBUG, formatter=None, maxBytes=0, backupCount=0, disableStderrLogger=False):
+def setup_default_logger(logfile=None, level=logging.DEBUG, formatter=None,
+                         maxBytes=0, backupCount=0, disableStderrLogger=False):
     """
     Deprecated. Use `logzero.loglevel(..)`, `logzero.logfile(..)`, etc.
 
@@ -394,7 +392,8 @@ def formatter(formatter, update_custom_handlers=False):
     _formatter = formatter
 
 
-def logfile(filename, formatter=None, mode='a', maxBytes=0, backupCount=0, encoding=None, loglevel=None, disableStderrLogger=False):
+def logfile(filename, formatter=None, mode='a', maxBytes=0, backupCount=0,
+            encoding=None, loglevel=None, disableStderrLogger=False):
     """
     Setup logging to file (using a `RotatingFileHandler <https://docs.python.org/2/library/logging.handlers.html#rotatingfilehandler>`_ internally).
 
@@ -425,16 +424,21 @@ def logfile(filename, formatter=None, mode='a', maxBytes=0, backupCount=0, encod
 
     # Step 2: If wanted, add the RotatingFileHandler now
     if filename:
-        rotating_filehandler = RotatingFileHandler(filename, mode=mode, maxBytes=maxBytes, backupCount=backupCount, encoding=encoding)
+        rotating_filehandler = RotatingFileHandler(filename, mode=mode,
+                                                   maxBytes=maxBytes,
+                                                   backupCount=backupCount,
+                                                   encoding=encoding)
 
         # Set internal attributes on this handler
         setattr(rotating_filehandler, LOGZERO_INTERNAL_LOGGER_ATTR, True)
         if loglevel:
-            setattr(rotating_filehandler, LOGZERO_INTERNAL_HANDLER_IS_CUSTOM_LOGLEVEL, True)
+            setattr(rotating_filehandler,
+                    LOGZERO_INTERNAL_HANDLER_IS_CUSTOM_LOGLEVEL, True)
 
         # Configure the handler and add it to the logger
         rotating_filehandler.setLevel(loglevel or _loglevel)
-        rotating_filehandler.setFormatter(formatter or _formatter or LogFormatter(color=False))
+        rotating_filehandler.setFormatter(formatter or _formatter or
+                                          LogFormatter(color=False))
         logger.addHandler(rotating_filehandler)
 
 
