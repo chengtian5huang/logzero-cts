@@ -207,10 +207,11 @@ def test_default_logger(disableStdErrorLogger=False):
         logzero.setup_default_logger(logfile=temp.name, disableStderrLogger=disableStdErrorLogger)
         logzero.logger.debug("debug1")  # will be logged
 
-        # Reconfigure with loglevel INFO
-        logzero.setup_default_logger(logfile=temp.name, level=logging.INFO, disableStderrLogger=disableStdErrorLogger)
+        # Reconfigure with loglevel ERROR
+        logzero.setup_default_logger(logfile=temp.name, level=logging.ERROR, disableStderrLogger=disableStdErrorLogger)
         logzero.logger.debug("debug2")  # will not be logged
-        logzero.logger.info("info1")  # will be logged
+        logzero.logger.info("info1")  # will not be logged
+        logzero.logger.error("error1")  # will be logged
 
         # Reconfigure with a different formatter
         log_format = '%(color)s[xxx]%(end_color)s %(message)s'
@@ -228,28 +229,26 @@ def test_default_logger(disableStdErrorLogger=False):
         temp.close()
 
 def _check_strs_in(strs, content=None):
-    for failed in filter(lambda s:not (s in content), strs):
-        assert all(part in content for part in failed.split())
+    must_strs = strs.get('ins')
+    banned_strs = strs.get('outs')
+    # check if test case is valid, a str cant not be banned while it is a must.
+    assert must_strs & banned_strs == set()
+
+    for failed in filter(lambda s:not (s in content), must_strs):
+        for part in failed.split(maxsplit=2):
+            assert part in content
+
+    for failed in filter(lambda s:s in content, banned_strs):
+        for part in failed.split(maxsplit=2):
+            assert part in content
 
 @pytest.mark.skip(reason="not a standalone test")
 def test_default_logger_output(content):
-    assert "] debug1" in content
-    assert "] debug2" not in content
-    assert "] info1" in content
-
-    try:
-        target_msg = "xxx] info2"
-        assert target_msg in content
-    except AssertionError:
-        # as i tested, there were some ANSI ESC between *xxx]* and *info2*
-        # dont know if it's caused by nt os.
-        if os.name == 'nt':
-            assert all(part in content for part in target_msg.split())
-        else:
-            raise
-
-    assert "] debug3" not in content
-
+    cases = {
+            'ins':{"] debug1", "xxx] info2"},
+            'outs':{"] debug2", "] info1", "] debug3"}
+            }
+    _check_strs_in(cases, content=content)
 
 def test_setup_logger_reconfiguration():
     """
@@ -289,21 +288,29 @@ def test_setup_logger_reconfiguration():
 
         with open(temp.name) as f:
             content = f.read()
-            assert "] debug1" in content
-            assert "] debug2" not in content
-            assert "] debug3" in content
-            assert "] debug4" not in content
-            assert "] info1" in content
-            assert "] debug5" in content
+            cases = {
+                    'ins': {
+                            "] debug1", "] debug3", "] info1",
+                            "] debug5",
+                            },
+                    'outs': {
+                            "] debug4", "] debug2",
+                            }
+                    }
+            _check_strs_in(cases, content=content)
 
         with open(temp2.name) as f:
             content = f.read()
-            assert "] debug1" in content
-            assert "] debug2" in content
-            assert "] debug3" in content
-            assert "] debug4" not in content
-            assert "] info1" in content
-            assert "] debug5" in content
+            cases = {
+                    'ins': {
+                            "] debug1", "] debug3", "] info1",
+                            "] debug5", "] debug2"
+                            },
+                    'outs': {
+                            "] debug4",
+                            }
+                    }
+            _check_strs_in(cases, content=content)
 
     finally:
         temp.close()
