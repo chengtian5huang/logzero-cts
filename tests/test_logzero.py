@@ -6,12 +6,10 @@ test_logzero
 
 Tests for `logzero` module.
 """
-import sys
-sys.path.append("..")
+
 import os
 import tempfile
 import logging
-sys.path.insert(0, "D:\py_work\cts_tools\logzero_cts")
 import logzero
 import pytest
 
@@ -20,28 +18,33 @@ import pytest
 # which mean pass *temp* to kwarg *logfile* will raise
 # a PerrmissionError.
 real_NamedTemporaryFile = tempfile.NamedTemporaryFile
-
+tempfile.NamedTemporaryFile = None
 
 class nt_compat_cls(object):
     def __init__(self, name):
-        print(name, 'name passed to nt_compat_cls')
         self.name = os.path.basename(name)+'.nt_compat'
+
     def close(self):
-        """ dont know for sure, who the hell delete the file?"""
-        """why it has to _nt_compat?"""
+        """dont know who the hell open twice on this one file?"""
+        """every file name is somethig like xxxxx.nt_compat.nt_compat"""
         pass
 
 def tearDown_nt_compat():
+    tempfile.NamedTemporaryFile = None
+    tempfile.NamedTemporaryFile = real_NamedTemporaryFile
     dir_files = os.listdir()
+    cant_del, deled = 0, 0
     for file in dir_files:
         if file.endswith('nt_compat'):
             try:
                 os.remove(file)
             except Exception as err:
-                print(repr(err))
-                print('remove failed!!!')
+                cant_del += 1
             else:
-                print('remove done!!!')
+                deled += 1
+    print('{} temp files for nt compatible have been delete, but {} remains.'
+          .format(deled, cant_del))
+    print('u may want to delete them later.')
 
 
 def nt_compat(*args, **kwargs):
@@ -50,7 +53,6 @@ def nt_compat(*args, **kwargs):
         temp_path = real_NamedTemporaryFile(*args, **kwargs)
         nt_temp = nt_compat_cls(temp_path.name)
         temp_path.close()
-        print(nt_temp.name, 'just created')
         return nt_temp
 
     if os.name != 'nt':
@@ -66,7 +68,6 @@ def test_write_to_logfile_and_stderr(capsys):
     logzero.reset_default_logger()
     temp = tempfile.NamedTemporaryFile()
     try:
-        print(temp.name, 'before pass to logfile')
         logger = logzero.setup_logger(logfile=temp.name)
         logger.info("test log output")
 
@@ -377,7 +378,8 @@ def test_default_logger_syslog_only(capsys):
     assert out == '' and err == ''
 #'''
 if __name__ == '__main__':
-   pytest.main([__file__, '-x'])
-   tearDown_nt_compat()
-   #test_write_to_logfile_and_stderr(1)
+    pytest.main([__file__, '-x'])
+    tearDown_nt_compat()
+else:
+    tearDown_nt_compat()
 
