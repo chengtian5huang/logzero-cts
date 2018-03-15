@@ -79,10 +79,11 @@ _loglevel = logging.DEBUG
 _logfile = None
 _formatter = None
 
-### Setup colorama on Windows
+# Setup colorama on Windows
 if os.name == 'nt':
     from colorama import init as colorama_init
     colorama_init()
+
 
 def setup_logger(name=None, logfile=None, level=logging.DEBUG, formatter=None,
                  maxBytes=0, backupCount=0, fileLoglevel=None,
@@ -151,7 +152,8 @@ def setup_logger(name=None, logfile=None, level=logging.DEBUG, formatter=None,
                                                    encoding='utf-8')
         setattr(rotating_filehandler, LOGZERO_INTERNAL_LOGGER_ATTR, True)
         rotating_filehandler.setLevel(fileLoglevel or level)
-        rotating_filehandler.setFormatter(formatter or LogFormatter(color=False))
+        rotating_filehandler.setFormatter(
+            formatter or LogFormatter(color=False))
         _logger.addHandler(rotating_filehandler)
 
     return _logger
@@ -234,7 +236,7 @@ class LogFormatter(logging.Formatter):
             record.end_color = self._normal
         else:
             record.color = record.end_color = ''
-### replacement here!
+# replacement here!
         formatted = self._fmt % record.__dict__
 
         if record.exc_info:
@@ -480,7 +482,8 @@ def log_function_call(func):
     @functools.wraps(func)
     def wrap(*args, **kwargs):
         args_str = ", ".join([str(arg) for arg in args])
-        kwargs_str = ", ".join(["%s=%s" % (key, kwargs[key]) for key in kwargs])
+        kwargs_str = ", ".join(["%s=%s" % (key, kwargs[key])
+                                for key in kwargs])
         if args_str and kwargs_str:
             all_args_str = ", ".join([args_str, kwargs_str])
         else:
@@ -492,8 +495,8 @@ def log_function_call(func):
 
 if __name__ == "__main__":
     f = '%(color)s[%(levelname)s][%(funcName)s|%(lineno)s] -> %(message)s%(end_color)s'
-    demo = setup_logger(name='demo', level=logging.DEBUG,# change level here
-                           formatter=LogFormatter(fmt=f))
+    demo = setup_logger(name='demo', level=logging.DEBUG,  # change level here
+                        formatter=LogFormatter(fmt=f))
     LD = demo.debug
     LI = demo.info
     LW = demo.warning
